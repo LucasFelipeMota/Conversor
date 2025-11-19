@@ -6,18 +6,11 @@ import 'dart:convert';
 const request =
     'https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_nNSJpueNH0i2U2ql9dl3oDJ7Vl24R3LT1whEUCUG';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  //Map<String, dynamic> rates = await getData();
-
-  //print("USD: ${rates['USD']}");
-  //print("BRL: ${rates['BRL']}");
-  //print("EUR: ${rates['EUR']}");
-
+void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     home: Home(),
+    theme: ThemeData(hintColor: Colors.amber, primaryColor: Colors.white),
   ));
 }
 
@@ -35,15 +28,101 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late double dolar;
+  late double euro;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text("\$ Conversor \$"),
+        title: const Text("\$ Conversor \$"),
         backgroundColor: Colors.amber,
         centerTitle: true,
       ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: getData(),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+              return const Center(
+                child: Text(
+                  "Carregando Dados...",
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 25.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            default:
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text(
+                    "Erro ao carregar dados",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                );
+              } else {
+                Map<String, dynamic> currencies = snapshot.data!;
+                dolar = (currencies['USD'] as num).toDouble();
+                euro = (currencies['EUR'] as num).toDouble();
+
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(Icons.monetization_on,
+                          size: 150.0, color: Colors.amber),
+                      buildTextField("Reais", "R\$"),
+                      /*TextField(
+                        decoration: InputDecoration(
+                            labelText: "Reais",
+                            labelStyle: TextStyle(color: Colors.amber),
+                            border: OutlineInputBorder(),
+                            prefixText: "R\$"),
+                        style: TextStyle(color: Colors.amber, fontSize: 25.0),
+                      ),*/
+                      Divider(),
+                      buildTextField("Dólares", "US\$"),
+                      /*TextField(
+                        decoration: InputDecoration(
+                            labelText: "Dóllares",
+                            labelStyle: TextStyle(color: Colors.amber),
+                            border: OutlineInputBorder(),
+                            prefixText: "US\$"),
+                        style: TextStyle(color: Colors.amber, fontSize: 25.0),
+                      ),*/
+                      Divider(),
+                      buildTextField("Euros", "€")
+                      /*TextField(
+                        decoration: InputDecoration(
+                            labelText: "EUROS",
+                            labelStyle: TextStyle(color: Colors.amber),
+                            border: OutlineInputBorder(),
+                            prefixText: "€"),
+                        style: TextStyle(color: Colors.amber, fontSize: 25.0),
+                      ),*/
+                    ],
+                  ),
+                );
+              }
+          }
+        },
+      ),
     );
   }
+}
+
+Widget buildTextField(String label, String prefix) {
+  return TextField(
+    decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.amber),
+        border: OutlineInputBorder(),
+        prefixText: prefix),
+    style: TextStyle(color: Colors.amber, fontSize: 25.0),
+  );
 }
