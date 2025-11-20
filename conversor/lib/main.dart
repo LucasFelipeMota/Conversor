@@ -36,17 +36,41 @@ class _HomeState extends State<Home> {
   late double euro;
 
   void _realChanged(String text) {
-    double real = double.parse(text);
+    double? real = double.tryParse(text.replaceAll(',', '.'));
+    if (real == null) {
+      dolarController.text = '';
+      euroController.text = '';
+      return;
+    }
+
     dolarController.text = (real / dolar).toStringAsFixed(2);
     euroController.text = (real / euro).toStringAsFixed(2);
   }
 
   void _dolarChanged(String text) {
-    print(text);
+    double? usd = double.tryParse(text.replaceAll(',', '.'));
+    if (usd == null) {
+      realController.text = '';
+      euroController.text = '';
+      return;
+    }
+
+    double real = usd * dolar;
+    realController.text = real.toStringAsFixed(2);
+    euroController.text = (real / euro).toStringAsFixed(2);
   }
 
   void _euroChanged(String text) {
-    print(text);
+    double? eur = double.tryParse(text.replaceAll(',', '.'));
+    if (eur == null) {
+      realController.text = '';
+      dolarController.text = '';
+      return;
+    }
+
+    double real = eur * euro;
+    realController.text = real.toStringAsFixed(2);
+    dolarController.text = (real / dolar).toStringAsFixed(2);
   }
 
   @override
@@ -84,7 +108,8 @@ class _HomeState extends State<Home> {
                 );
               } else {
                 Map<String, dynamic> currencies = snapshot.data!;
-                dolar = (currencies['USD'] as num).toDouble();
+                dolar = (currencies['BRL'] as num).toDouble();
+
                 euro = (currencies['EUR'] as num).toDouble();
 
                 return SingleChildScrollView(
@@ -111,19 +136,19 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-}
 
-Widget buildTextField(String label, String prefix, TextEditingController c,
-    void Function(String) f) {
-  return TextField(
-    controller: c,
-    decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.amber),
-        border: OutlineInputBorder(),
-        prefixText: prefix),
-    style: TextStyle(color: Colors.amber, fontSize: 25.0),
-    onChanged: f,
-    keyboardType: TextInputType.number,
-  );
+  Widget buildTextField(String label, String prefix, TextEditingController c,
+      void Function(String) f) {
+    return TextField(
+      controller: c,
+      decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.amber),
+          border: OutlineInputBorder(),
+          prefixText: prefix),
+      style: TextStyle(color: Colors.amber, fontSize: 25.0),
+      onChanged: f,
+      keyboardType: TextInputType.number,
+    );
+  }
 }
